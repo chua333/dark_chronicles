@@ -1,0 +1,43 @@
+[
+    {
+        "world": "Evergreen",
+        "locations": {
+            "City Gate": {
+                "description": "The massive gate guards the city from outside threats.",
+                "coordinates": [5, 2]
+            },
+            "Marketplace": {
+                "description": "A bustling market full of merchants and townsfolk.",
+                "coordinates": [7, 4]
+            },
+            "Tavern": {
+                "description": "A warm place filled with chatter, ale, and rumours.",
+                "coordinates": [8, 7]
+            },
+            "Square": {
+                "description": "The city square where people gather for announcements.",
+                "coordinates": [10, 5]
+            },
+            "Temple": {
+                "description": "A peaceful sanctuary for the faithful.",
+                "coordinates": [12, 8]
+            },
+            "Barracks": {
+                "description": "The guards and city militia train and rest here.",
+                "coordinates": [3, 6]
+            },
+            "Docks": {
+                "description": "Boats load and unload by the riverbanks.",
+                "coordinates": [1, 9]
+            },
+            "Warehouse": {
+                "description": "Storage for merchant goods and supplies.",
+                "coordinates": [6, 10]
+            },
+            "Forest Edge": {
+                "description": "The wilds begin here, where the city ends.",
+                "coordinates": [11, 13]
+            }
+        }
+    }
+]
