@@ -36,8 +36,15 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b")
 model = AutoModelForCausalLM.from_pretrained("google/gemma-2b", device_map="auto")
 
-input_text = "tell me a joke about a pirate"
+input_text = "Context: Company ABC has the product of smartphones and tablets released in 2023, Question: Can you tell me about company ABC's product?"
 input_ids = tokenizer(input_text, return_tensors="pt").to("cuda")
 
-outputs = model.generate(**input_ids)
+outputs = model.generate(
+    **input_ids,
+    max_new_tokens=100,
+    do_sample=True,          # Enable sampling (instead of greedy)
+    temperature=0.7,         # Controls creativity (lower = more focused)
+    top_p=0.9,               # Nucleus sampling
+    repetition_penalty=1.1,  # Prevents excessive repetition
+)
 print(tokenizer.decode(outputs[0]))
