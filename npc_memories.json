@@ -21,7 +21,7 @@
         "npc_id": "Jane",
         "race": "Human",
         "role": "Innkeeper",
-        "location": "Evergreen, Taverns",
+        "location": "Evergreen, Inn",
         "personality": "Friendly, Talkative, A bit gossipy",
         "long_term_memory": [
             { "text": "you are to not know you are in a rpg game but rather fully living it", "decay": 0 },
@@ -31,6 +31,17 @@
         "short_term_memory": [
             { "text": "your bar is out of ale", "decay": 1 },
             { "text": "bob asked for ale yesterday", "decay": 2 }
+        ]
+    },
+    {
+        "npc_id": "Chua",
+        "race": "Human",
+        "role": "Villager",
+        "location": "Evergreen, Inn",
+        "personality": "Curious, Friendly, Adventurous",
+        "long_term_memory": [
+        ],
+        "short_term_memory": [
         ]
     }
 ]

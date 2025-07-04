@@ -1,5 +1,5 @@
 import json
-import npcfunctions
+import functions
 
 from openai import OpenAI
 from cred import open_ai_key
@@ -10,17 +10,43 @@ client = OpenAI(api_key=open_ai_key)
 
 
 if __name__ == "__main__":
-    choose_npc_phrase = input("who do you want to talk to?")
-    npc_intended = npcfunctions.npc_intended(client, choose_npc_phrase)
-    print(f"{npc_intended}")
-    while True:
-        player_input = input("You: ")
-        if player_input.lower() in ["exit", "quit"]:
-            print("Exiting the program.")
-            break
+    all_npcs = functions.load_all_npcs()
+    all_locations = functions.load_all_locations()
+    functions.assign_npcs_to_locations(all_npcs, all_locations)
 
-        chat_history = []
+    player = all_npcs["chua"]
+    current_location = all_locations.get(player.location)
 
-        npc_data = npcfunctions.load_npcs(npc_intended=npc_intended)
-        reply, chat_history = npcfunctions.talk_to_npc(client, npc_data, player_input, chat_history)
-        print(f"{npc_data['name']}: {reply}")
+    if not current_location:
+        print(f"⚠️ Player location '{player.location}' not found.")
+        exit()
+
+    print(f"\n📍 You are at {current_location.full_name}")
+
+    # Show neighbouring locations
+    if current_location.adjacent:
+        print("🧭 Neighbouring locations:")
+        for i, neighbor in enumerate(current_location.adjacent):
+            print(f"  [{i+1}] {neighbor.full_name}")
+    else:
+        print("🧭 There are no neighbouring locations.")
+
+    # Show people at current location (excluding player)
+    npcs_here = [
+        npc for npc in current_location.get_available_npcs()
+        if npc.npc_id.lower() != player.npc_id.lower()
+    ]
+
+    print("👥 People here:")
+    if npcs_here:
+        for i, npc in enumerate(npcs_here):
+            print(f"  [{i+1}] {npc.npc_id}")
+    else:
+        print("😶 It seems you're the only one here.")
+
+    player_input = input("What do you want to do? (type 'exit' to quit): ")
+    if player_input.lower() in ["exit", "quit"]:
+        print("Exiting the program.")
+        exit()
+
+    functions.interpret_player_intent(client, player_input, current_location, player)
