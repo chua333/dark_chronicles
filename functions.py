@@ -2,6 +2,8 @@ import json
 
 from classes import NPC, Location
 
+model = "gpt-4"
+
 
 def npc_finder(client, choose_npc_phrase):
     system_prompt = "you are to find the name from the phrase and only return the name, do not add any other text, if there is multiple, return the name followed by a comma"
@@ -9,7 +11,7 @@ def npc_finder(client, choose_npc_phrase):
     messages = [{"role": "system", "content": system_prompt}] + choose_npc_phrase
 
     response = client.chat.completions.create(
-        model='gpt-4',
+        model=model,
         messages = messages
     )
     reply = response.choices[0].message.content
@@ -17,7 +19,7 @@ def npc_finder(client, choose_npc_phrase):
     return reply
 
 
-def interpret_player_intent(client, player_input, current_location, player):
+def interpret_player_intent(client, player_input, current_location, player, people_count_flag):
     system_prompt = """"
     you are to find the intent of the player that is most matching with the available actions below
     1. talk to npc
@@ -30,19 +32,27 @@ def interpret_player_intent(client, player_input, current_location, player):
     messages = [{"role": "system", "content": system_prompt}] + player_intent
 
     response = client.chat.completions.create(
-        model='gpt-4',
+        model=model,
         messages = messages
     )
     reply = response.choices[0].message.content
 
     if reply == "1":
-        choice = input("Who do you want to talk to? Enter number: ")
+        if people_count_flag == 0:
+            print("😶 Are you dumb? There is nobody here, go somewhere else stupid.\n")
+            return  # Don't exit, let player try another action
+
+        choice = input("Who do you want to talk to? Enter number (or type 'back'): ")
+        if choice.lower() == "back":
+            print("Returning to main options...\n")
+            return
+
         try:
             npc_index = int(choice) - 1
             npc = current_location.get_available_npcs()[npc_index]
         except (IndexError, ValueError):
-            print("Invalid choice.")
-            exit()
+            print("Invalid choice. Returning...\n")
+            return
 
         chat_history = []
         while True:
@@ -56,29 +66,21 @@ def interpret_player_intent(client, player_input, current_location, player):
         
 
 def npc_intended(client, choose_npc_phrase):
-    system_prompt = "you are to find the person the user wants to find and only return the name, do not add any other text, if there is multiple, return the name followed by a comma"
+    system_prompt = """"
+    you are to find who the named characters in the phrase,
+    you can return the name and title if there is one, do not add any other text if there's not needed,
+    if there is multiple, return the name followed by a comma
+    """
     choose_npc_phrase = [{"role": "user", "content": f"find the name from the phrase: {choose_npc_phrase}"}]
     messages = [{"role": "system", "content": system_prompt}] + choose_npc_phrase
 
     response = client.chat.completions.create(
-        model='gpt-4',
+        model=model,
         messages = messages
     )
     reply = response.choices[0].message.content
 
     return reply
-
-
-def load_all_npcs(file_path="npc_memories.json"):
-    with open(file_path, "r") as f:
-        npc_list = json.load(f)
-
-    npc_dict = {}
-    for npc_data in npc_list:
-        npc = NPC(npc_data)
-        npc_dict[npc.npc_id.lower()] = npc
-
-    return npc_dict
 
 
 def talk_to_npc(client, npc: NPC, player: NPC, player_input, chat_history):
@@ -98,7 +100,7 @@ def talk_to_npc(client, npc: NPC, player: NPC, player_input, chat_history):
     messages = [{"role": "system", "content": system_prompt}] + chat_history
 
     response = client.chat.completions.create(
-        model="gpt-4",
+        model=model,
         messages=messages
     )
 
@@ -107,40 +109,3 @@ def talk_to_npc(client, npc: NPC, player: NPC, player_input, chat_history):
 
     return reply, chat_history
 
-
-def load_all_locations(file_path="locations.json"):
-    import json
-
-    with open(file_path, "r") as f:
-        data = json.load(f)
-
-    locations = {}
-
-    for city_block in data:
-        city = city_block["City"]
-        for loc in city_block["Locations"]:
-            location = Location(
-                name=loc["name"],
-                city=city,
-                adjacent=loc["adjacent"]
-            )
-            locations[location.full_name] = location
-
-    # Link adjacents
-    for location in locations.values():
-        location.adjacent = [
-            locations[f"{location.city}, {adj_name}"]
-            for adj_name in location.adjacent_names
-            if f"{location.city}, {adj_name}" in locations
-        ]
-
-    return locations
-
-
-def assign_npcs_to_locations(all_npcs, all_locations):
-    for npc in all_npcs.values():
-        loc_name = npc.location  # e.g., "Evergreen, Inn"
-        if loc_name in all_locations:
-            all_locations[loc_name].add_npc(npc)
-        else:
-            print(f"⚠️ Warning: Location '{loc_name}' not found for NPC '{npc.npc_id}'")

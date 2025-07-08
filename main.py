@@ -1,52 +1,46 @@
 import json
 import functions
 
-from openai import OpenAI
-from cred import open_ai_key
-
-
-# initialize openai client first to save time
-client = OpenAI(api_key=open_ai_key)
+from classes import NPCManager, LocationManager, AIAgentGerald, AIAgentVorrak, AIAgentFinder
 
 
 if __name__ == "__main__":
-    all_npcs = functions.load_all_npcs()
-    all_locations = functions.load_all_locations()
-    functions.assign_npcs_to_locations(all_npcs, all_locations)
+    # loading NPCs and locations
+    print("🔄 Loading NPCs and locations...")
+    npc_manager = NPCManager()
+    location_manager = LocationManager()
+    npc_manager.assign_to_locations(location_manager)
 
-    player = all_npcs["chua"]
-    current_location = all_locations.get(player.location)
+    # Set the player to a specific NPC
+    print("👤 Setting player to 'chua' NPC...")
+    player = npc_manager.get_npc("chua")
 
-    if not current_location:
-        print(f"⚠️ Player location '{player.location}' not found.")
-        exit()
-
+    # loading player location
+    print("🔄 Loading player location...")
+    current_location = location_manager.get_location(player)
     print(f"\n📍 You are at {current_location.full_name}")
 
     # Show neighbouring locations
-    if current_location.adjacent:
-        print("🧭 Neighbouring locations:")
-        for i, neighbor in enumerate(current_location.adjacent):
-            print(f"  [{i+1}] {neighbor.full_name}")
-    else:
-        print("🧭 There are no neighbouring locations.")
+    print("Loading map...")
+    location_manager.get_adjacent_locations(current_location)
 
     # Show people at current location (excluding player)
-    npcs_here = [
-        npc for npc in current_location.get_available_npcs()
-        if npc.npc_id.lower() != player.npc_id.lower()
-    ]
+    location_manager.get_all_npcs_in_location(current_location, player)
 
-    print("👥 People here:")
-    if npcs_here:
-        for i, npc in enumerate(npcs_here):
-            print(f"  [{i+1}] {npc.npc_id}")
-    else:
-        print("😶 It seems you're the only one here.")
+    # game start
+    ai_npc = AIAgentVorrak()
+    ai_name_finder = AIAgentFinder()
+    print("\n🎮 Game started! Type 'exit' to quit.")
+    while True:
+        player_input = input("You: ")
+        if player_input.lower() in ["exit", "quit"]:
+            print("Exiting the program.")
+            exit()
 
-    player_input = input("What do you want to do? (type 'exit' to quit): ")
-    if player_input.lower() in ["exit", "quit"]:
-        print("Exiting the program.")
-        exit()
-
-    functions.interpret_player_intent(client, player_input, current_location, player)
+        reply = ai_npc.conversation(player_input, current_location, player)
+        ai_display_name = ai_npc.name if ai_npc.name_revealed else "?"
+        print(f"{ai_display_name}: {reply}")
+        ai_npc_name_found = ai_name_finder.character_name_finder(ai_npc.client, reply)
+        if ai_npc_name_found != "No name found" and ai_npc_name_found in ai_npc.name:
+            ai_npc.name_revealed = True
+            
