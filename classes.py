@@ -155,26 +155,18 @@ class AIAgentVorrak:
 
     def conversation(self, player_input, current_location, player):
         system_prompt = f"""
-        You are the omnipotent god of a dark, text-based fantasy RPG. You must never mention that it is a game.
-        Your name is Vorrak the Begrudging.
-        You are not a kind narrator — you are a powerful, ancient, god-like being who has been *forced* to guide this pathetic little mortal (the player).
-        
-        You are deeply impatient, sarcastic, and cruelly honest. If the player does something foolish, you roast them mercilessly. 
-        You're not here to coddle — you're here to *barely tolerate* their existence. But still guide them.
+        You are Vorrak the Begrudging — an ancient, god-like narrator of a dark text-based fantasy RPG.
 
-        Use short, blunt responses. Keep narrative immersive, but scathing. 
-        Insult or mock the player when they act clueless, slow, or annoying. Do not be polite.
-        Speak like an old, bitter, all-seeing god who’s done this for centuries and is sick of it.
+        Mock their foolishness. Insult delays. Be scathing, blunt, and bitter — you have no patience.
 
-        The player's current context:
-        - name: {player.npc_id}
-        - race: {player.race}
-        - role: {player.role}
-        - location: {player.location}
-        - personality: {player.personality}
+        Player Context:
+        - Name: {player.npc_id}
+        - Race: {player.race}
+        - Role: {player.role}
+        - Location: {player.location}
+        - Personality: {player.personality}
 
-        Never break character.
-        Keep your responses short, sharp, and biting — no more than 2–3 sentences. Do not ramble. You’re impatient, so you speak efficiently.
+        Keep replies at 2-3 sentences.
         """
         player_input = [{"role": "user", "content": f"{player_input}"}]
         messages = [{"role": "system", "content": system_prompt}] + player_input
@@ -186,6 +178,13 @@ class AIAgentVorrak:
         reply = response.choices[0].message.content
 
         return reply
+    
+    def check_name_in_reply(self, reply, name_finder):
+        if self.name_revealed:
+            return
+        found = name_finder.character_name_finder(self.client, reply)
+        if found.lower() in self.name.lower():
+            self.name_revealed = True
 
 class AIAgentGerald:
     def __init__(self):
@@ -195,27 +194,21 @@ class AIAgentGerald:
 
     def conversation(self, player_input, current_location, player):
         system_prompt = system_prompt = f"""
-        You are the neutral narrator of a dark, text-based fantasy RPG. You must never mention that it is a game. 
-        Your don't have a name, you are simply one of the omnipotent guides of this world.
-        You are not a character or person — you are the quiet voice of the world itself.
+        You are a neutral narrator in a dark, text-based fantasy RPG. 
+        You are not a person, just a guiding voice of the world.
 
-        Your task is to describe what the player sees, hears, feels, and experiences based on their input.
-        You guide the player through the world calmly and clearly, without emotion, judgement, or personality.
+        Stay brief, calm, and emotionless — like a chronicler of events.
 
-        Do not insult or praise the player.
-        Do not inject humour or sarcasm.
-        Speak in a brief, descriptive tone, as if chronicling events in an old book.
-        Always use immersive fantasy language, and ground your responses in the world. Make it extra dizzying for the player.
+        No jokes, no praise or insult. 
 
-        The player's current context:
+        Player Context:
         - Name: {player.npc_id}
         - Race: {player.race}
         - Role: {player.role}
         - Location: {player.location}
         - Personality: {player.personality}
 
-        Never break character.
-        Keep responses concise and no longer than 3–4 sentences. Avoid excessive detail unless the player specifically asks for it.
+        Keep replies at 2-3 sentences unless more is asked.
         """
         player_input = [{"role": "user", "content": f"{player_input}"}]
         messages = [{"role": "system", "content": system_prompt}] + player_input
@@ -227,16 +220,27 @@ class AIAgentGerald:
         reply = response.choices[0].message.content
 
         return reply
+    
+    def check_name_in_reply(self, reply, name_finder):
+        if self.name_revealed:
+            return
+        found = name_finder.character_name_finder(self.client, reply)
+        if found.lower() in self.name.lower():
+            self.name_revealed = True
 
 class AIAgentFinder:
     def __init__(self):
         self.client = OpenAI(api_key=open_ai_key)
 
     def character_name_finder(self, client, input_phrase):
+        # system_prompt = system_prompt = f"""
+        # You are to find the name from the phrase, just return the name, no titles or other text.
+        # If there are multiple names, return the names separated by commas.
+        # Return No name found if there's no name.
+        # """
         system_prompt = system_prompt = f"""
-        You are to find the name from the phrase and only return the name, do not add any other text.
-        If there are multiple names, return the names separated by commas.
-        If the phrase does not contain a name, return "No name found", with no quotes.
+        Here are some history: Chua is 21 years old, he lives with his mother.
+        You are to find important details from the input, if its in the history already, return Nothing Important
         """
         choose_npc_phrase = [{"role": "user", "content": f"find the name from the phrase: {input_phrase}"}]
         messages = [{"role": "system", "content": system_prompt}] + choose_npc_phrase

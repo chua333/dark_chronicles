@@ -40,7 +40,5 @@ if __name__ == "__main__":
         reply = ai_npc.conversation(player_input, current_location, player)
         ai_display_name = ai_npc.name if ai_npc.name_revealed else "?"
         print(f"{ai_display_name}: {reply}")
-        ai_npc_name_found = ai_name_finder.character_name_finder(ai_npc.client, reply)
-        if ai_npc_name_found != "No name found" and ai_npc_name_found in ai_npc.name:
-            ai_npc.name_revealed = True
+        ai_npc.check_name_in_reply(reply, ai_name_finder)
             
