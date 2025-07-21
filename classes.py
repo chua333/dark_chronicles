@@ -239,8 +239,8 @@ class AIAgentFinder:
         # Return No name found if there's no name.
         # """
         system_prompt = system_prompt = f"""
-        Here are some history: Chua is 21 years old, he lives with his mother.
-        You are to find important details from the input, if its in the history already, return Nothing Important
+        Here are your memories: Chua is 21 years old, he lives with his mother.
+        Output details you dont remember/havent encountered only.
         """
         choose_npc_phrase = [{"role": "user", "content": f"find the name from the phrase: {input_phrase}"}]
         messages = [{"role": "system", "content": system_prompt}] + choose_npc_phrase
